@@ -8,9 +8,22 @@ cap dada personal.**
 - **Participants:** `https://<la-vostra-url>/` (o directament el QR)
 - **Facilitació:** `https://<la-vostra-url>/presenta` (amb PIN)
 
+## Sala permanent
+
+Per defecte hi ha una **sala permanent amb el codi `1312`**: sempre existeix i les persones
+participants hi entren directament obrint la URL principal (o el QR), sense escriure cap codi.
+La persona facilitadora també hi entra directament en posar el PIN.
+
+- Per canviar el codi, definiu la variable `SALA_FIXA` a Vercel (4 xifres).
+- Per desactivar-la i tornar a les sales amb codi aleatori, definiu `SALA_FIXA` buida.
+- El codi de sala és públic (surt al projector): **el PIN ha de ser diferent del codi de sala.**
+- El QR apunta sempre a la URL de producció de Vercel (o a `PUBLIC_URL`, si la definiu),
+  encara que obriu la facilitació des d'una altra adreça.
+
 ## Com funciona
 
-1. La persona facilitadora obre `/presenta`, introdueix el PIN i prem **Crear la sala**.
+1. La persona facilitadora obre `/presenta` i introdueix el PIN (amb sala permanent, hi entra directament;
+   sense, prem **Crear la sala**).
 2. Al projector apareixen el **QR** i el **codi de sala**. Les persones participants entren i premen
    **Em connecto**. Encara no veuen la història; al projector es veu quantes s'han connectat.
 3. La persona facilitadora prem **Començar la història**. Tots els mòbils mostren la primera cruïlla.

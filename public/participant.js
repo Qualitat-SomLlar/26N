@@ -6,7 +6,9 @@ const newPid = () => (crypto.randomUUID ? crypto.randomUUID().replace(/-/g, "") 
 let pid = storeGet("j25n-pid", null);
 if (typeof pid !== "string" || !/^[a-z0-9]{12,48}$/.test(pid)) { pid = newPid(); storeSet("j25n-pid", pid); }
 
-let sala = (new URLSearchParams(location.search).get("sala") || storeGet("j25n-sala", "") || "").trim();
+const salaParam = (new URLSearchParams(location.search).get("sala") || "").trim();
+let sala = (salaParam || storeGet("j25n-sala", "") || "").trim();
+let config = { salaFixa: null, storage: null };
 let estat = null;
 let codeError = "";
 let msg = "";
@@ -107,7 +109,16 @@ function lobbyScreen() {
     h("h1", null, "Connecta't per votar"),
     h("p", { class: "story" }, "D'aquí a una estona decidirem entre totes les persones de la sala com continua una història. Cada persona vota des del seu dispositiu i l'opció més votada decideix."),
     block,
+    dbWarning(),
     h("p", { class: "note" }, "Els vots són anònims i no es mostren noms."))];
+}
+
+function dbWarning() {
+  const local = ["localhost", "127.0.0.1"].includes(location.hostname);
+  if (config.storage !== "memory" || local) return null;
+  return h("div", { class: "panel warn-panel", role: "alert" },
+    h("b", null, "La web no té la base de dades connectada."),
+    h("p", { class: "note" }, "És possible que no vegis el mateix que la pantalla. Avisa la persona facilitadora."));
 }
 
 function voteScreen() {
@@ -121,13 +132,14 @@ function updateChip() {
   if (!chip) return;
   chip.className = "chip" + (sala && !offline ? " live" : "");
   chip.textContent = !sala ? "Sense sala" : offline ? "Sense connexió · reintentant…" : `Sala ${sala}`;
-  $("leave").hidden = !sala;
+  $("leave").hidden = !sala || sala === config.salaFixa;
 }
 
 function render() {
   const stage = $("stage");
   let content;
-  if (!sala || !estat) content = codeScreen();
+  if (sala && !estat && !codeError) content = [h("div", { class: "col lobby-solo" }, h("p", { class: "note" }, "Connectant amb la sala…"))];
+  else if (!sala || !estat) content = codeScreen();
   else if (estat.phase === "votant") content = voteScreen();
   else if (estat.phase === "resultat") content = resultView(estat);
   else if (estat.phase === "final") content = finalView(estat);
@@ -141,4 +153,8 @@ function render() {
 
 $("leave").addEventListener("click", () => { codeError = ""; leave(); });
 render();
-if (sala) enterCode(sala);
+(async () => {
+  try { config = { ...config, ...(await api("/api/config")) }; } catch { /* sense configuració: s'entra amb codi */ }
+  if (!salaParam && config.salaFixa) sala = config.salaFixa;
+  if (sala) enterCode(sala); else render();
+})();

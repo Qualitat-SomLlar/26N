@@ -13,14 +13,19 @@ let confirm = null;        // "reset" | "new"
 let pollTimer = null;
 let lastStamp = "";
 
-const joinUrl = () => `${location.origin}/?sala=${sala}`;
+let config = { salaFixa: null, publicUrl: null, storage: null };
+const baseUrl = () => config.publicUrl || location.origin;
+const joinUrl = () => config.salaFixa && sala === config.salaFixa ? `${baseUrl()}/` : `${baseUrl()}/?sala=${sala}`;
+const isFixed = () => !!config.salaFixa && sala === config.salaFixa;
 const savePin = (p) => { pin = p; try { sessionStorage.setItem("j25n-pin", p); } catch { /* sense emmagatzematge */ } };
 function flash(m) { msg = m; render(); setTimeout(() => { if (msg === m) { msg = ""; render(); } }, 6000); }
 
 async function login(p) {
   try {
-    await api("/api/admin", { pin: p, action: "login" });
+    const d = await api("/api/admin", { pin: p, action: "login" });
     savePin(p); loginError = "";
+    try { config = { ...config, ...(await api("/api/config")) }; } catch { /* es fa servir l'adreça actual */ }
+    if (d.salaFixa) { sala = d.salaFixa; storeSet("j25n-sala-fac", sala); }
     if (sala) await status(); else render();
     startPolling();
   } catch (e) { loginError = e.message || "No s'ha pogut entrar."; render(); }
@@ -105,13 +110,15 @@ function lobbyScreen() {
   return [
     h("div", { class: "col" },
       h("div", { class: "lobby-qr" }, qrEl(url)),
-      h("p", { class: "url-text" }, url.replace(/^https?:\/\//, ""))),
+      h("p", { class: "url-text" }, url.replace(/^https?:\/\//, "")),
+      config.publicUrl && config.publicUrl !== location.origin
+        ? h("p", { class: "note" }, "Estàs en una adreça diferent de la de producció. El QR apunta a la de producció.") : null),
     h("div", { class: "col" },
       h("p", { class: "eyebrow" }, "Activitat participativa"),
       h("h1", null, "Connecteu-vos per votar"),
       h("div", { class: "sala-code" }, h("span", { class: "tag" }, "Codi de la sala"), h("b", null, sala)),
       h("div", { class: "howto" },
-        h("div", null, h("b", null, "1 · Escaneja el QR"), h("span", null, "O entra a la web i escriu el codi.")),
+        h("div", null, h("b", null, "1 · Escaneja el QR"), h("span", null, isFixed() ? "O entra a l'adreça de sota el QR." : "O entra a la web i escriu el codi.")),
         h("div", null, h("b", null, "2 · Prem «Em connecto»"), h("span", null, "Encara no veuràs la història.")),
         h("div", null, h("b", null, "3 · Espera"), h("span", null, "Quan comencem, el contingut apareixerà sol."))),
       h("div", { class: "count-box" },
@@ -148,7 +155,10 @@ function renderFacbar() {
     return;
   }
   const e = data.estat;
-  if (e.phase === "inici") { add("Començar la història", () => act("start")); add("Sala nova", () => { confirm = "new"; render(); }, "ghost"); }
+  if (e.phase === "inici") {
+    add("Començar la història", () => act("start"));
+    if (!isFixed()) add("Sala nova", () => { confirm = "new"; render(); }, "ghost");
+  }
   if (e.phase === "votant") add("Tancar votació i mostrar resultat", () => act("close"));
   if (e.phase === "resultat") {
     add("Reobrir votació", () => act("reopen"), "ghost");

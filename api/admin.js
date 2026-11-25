@@ -1,6 +1,6 @@
 /* POST /api/admin {pin, action, sala?, choice?} — accions de la persona facilitadora
    action: login | create | status | start | close | pick | reopen | advance | reset */
-import { act, counts, createSala, getEstat, validCode } from "../lib/game.js";
+import { act, counts, createSala, getEstat, validCode, SALA_FIXA } from "../lib/game.js";
 import { checkPin, handle, readJson, send } from "../lib/http.js";
 import { storage } from "../lib/store.js";
 
@@ -14,7 +14,7 @@ export default handle(async (req, res) => {
   if (!checkPin(body.pin)) return send(res, 401, { error: "pin", message: "El PIN no és correcte." }, noStore);
 
   const { action } = body;
-  if (action === "login") return send(res, 200, { ok: true, storage }, noStore);
+  if (action === "login") return send(res, 200, { ok: true, storage, salaFixa: SALA_FIXA || null }, noStore);
   if (action === "create") {
     const sala = await createSala();
     return send(res, 200, { sala }, noStore);
