@@ -116,20 +116,20 @@ export const STORY = {
       title: "El despatx de coordinació", scene: "coord",
       tags: ["Minimització institucional"],
       text: [
-        "La Sílvia, la coordinadora, escolta l'Aina amb atenció. Quan acaba, diu:",
+        "La Xènia, la coordinadora, escolta l'Aina amb atenció. Quan acaba, diu:",
         { quote: "«Ho sento molt, de debò. Mira, en Marc és així, però és un gran professional i porta molts anys aquí. Si et sembla, hi parlo jo, discretament, i ho deixem aquí. No cal posar en marxa tota la maquinària, oi?»" },
         "L'Aina et mira, dubtosa."
       ],
       question: "Què fas?",
       options: [
         { key: "A", aina: -1, next: "rumor", label: "No dic res. Sembla una solució ràpida i discreta, i és l'Aina qui ha de decidir.",
-          conseq: "L'Aina accepta, sense gaire convicció. La Sílvia parla amb en Marc aquella setmana.",
+          conseq: "L'Aina accepta, sense gaire convicció. La Xènia parla amb en Marc aquella setmana.",
           learn: "Les solucions «discretes» poden semblar més amables, però sovint protegeixen l'organització i la persona que agredeix. L'Aina té dret a decidir, i per decidir necessita conèixer totes les opcions." },
         { key: "B", aina: 2, next: "represalies", label: "Recordo amb respecte que l'entitat té un protocol i que l'Aina té dret a activar-lo si ho vol.",
-          conseq: "La Sílvia s'incomoda un moment, però reconeix que té raó. L'Aina demana un dia per pensar-s'ho i, finalment, activa el protocol.",
+          conseq: "La Xènia s'incomoda un moment, però reconeix que té raó. L'Aina demana un dia per pensar-s'ho i, finalment, activa el protocol.",
           learn: "El protocol de prevenció i actuació davant l'assetjament sexual i per raó de sexe no és «maquinària»: és una garantia de drets. Recordar-ho també és acompanyar." },
         { key: "C", aina: 1, next: "represalies", label: "Proposo que l'Aina s'ho pensi uns dies abans de decidir res.",
-          conseq: "Tres dies després, l'Aina torna al despatx de la Sílvia amb les idees clares: vol activar el protocol.",
+          conseq: "Tres dies després, l'Aina torna al despatx de la Xènia amb les idees clares: vol activar el protocol.",
           learn: "No cal decidir-ho tot en una reunió. Donar temps és respectar el ritme de la persona i evitar decisions preses sota pressió." }
       ]
     },
@@ -138,7 +138,7 @@ export const STORY = {
       tags: ["Represàlies", "Aïllament"],
       text: [
         "Dues setmanes després, en Marc es creua amb l'Aina al passadís i li diu, en veu baixa:",
-        { quote: "«Ja m'han dit que vas anar a plorar a la Sílvia. Tranquil·la, que ja no et diré res més. Mai més.»" },
+        { quote: "«Ja m'han dit que vas anar a plorar a la Xènia. Tranquil·la, que ja no et diré res més. Mai més.»" },
         "Des d'aleshores, en Marc no li dirigeix la paraula, ni tan sols a les reunions. L'Aina t'ho explica, trasbalsada."
       ],
       question: "Què li dius?",
@@ -149,8 +149,8 @@ export const STORY = {
         { key: "B", aina: -2, next: "F_tancat", label: "Li dic que, almenys, ja no li fa comentaris. Potser és millor així.",
           conseq: "L'Aina no hi insisteix. Però a partir d'aleshores se sent invisible dins l'equip.",
           learn: "L'aïllament i el buit són formes de violència difícils de veure perquè no fan soroll. Que s'hagin acabat els comentaris no vol dir que s'hagi acabat la violència." },
-        { key: "C", aina: -1, next: "represalies", label: "Li recomano que demani a la Sílvia que hi torni a parlar.",
-          conseq: "La Sílvia hi torna a parlar. No canvia res. Finalment, l'Aina decideix activar el protocol.",
+        { key: "C", aina: -1, next: "represalies", label: "Li recomano que demani a la Xènia que hi torni a parlar.",
+          conseq: "La Xènia hi torna a parlar. No canvia res. Finalment, l'Aina decideix activar el protocol.",
           learn: "Repetir una solució que no ha funcionat allarga el patiment. Els canals formals existeixen precisament per quan la via informal no protegeix." }
       ]
     },
@@ -172,7 +172,7 @@ export const STORY = {
           conseq: "La comissió ho recull i recorda a tot l'equip, sense donar noms, que les represàlies estan prohibides. Els comentaris s'aturen.",
           learn: "Comunicar la violència de segon ordre protegeix qui acompanya i, indirectament, la víctima. Qui fa costat no ho hauria de pagar." },
         { key: "C", aina: 0, next: "entrevista", label: "Li responc davant de tothom, a la mateixa reunió.",
-          conseq: "La reunió es tensa i la Sílvia talla la conversa. Al passadís, algú et diu: «Al final, sou igual de conflictius l'un com l'altre».",
+          conseq: "La reunió es tensa i la Xènia talla la conversa. Al passadís, algú et diu: «Al final, sou igual de conflictius l'un com l'altre».",
           learn: "Respondre en calent és comprensible, però sovint converteix la violència en un «conflicte entre dues persones» i dilueix la responsabilitat." }
       ]
     },

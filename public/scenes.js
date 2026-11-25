@@ -1,6 +1,6 @@
 /* Il·lustracions SVG generades (viewBox 480×320) */
 export const esc = (s) => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-const NAMES = { tu: "Tu", aina: "Aina", marc: "Marc", nuria: "Núria", silvia: "Sílvia", altres: "" };
+const NAMES = { tu: "Tu", aina: "Aina", marc: "Marc", nuria: "Núria", silvia: "Xènia", altres: "" };
 function P(x, y, role, o = {}) {
   const s = o.s || 1, d = o.d ?? 0;
   const label = o.label ?? NAMES[role];
@@ -118,7 +118,7 @@ export const SCENES = {
     "Despatx de coordinació: la coordinadora proposa resoldre-ho de manera discreta"),
   rumor: () => svgWrap(Wall() + Ground(250) + `<path class="sv-line" d="M0 250 L480 250 M60 0 v250 M420 0 v250"/>` +
     P(170, 250, "marc", { d: 0.2, s: 1.1 }) + P(300, 250, "aina", { d: 0.4, s: 1.1 }) +
-    B(170, 150, ["«…vas anar a plorar", "a la Sílvia…»"], { d: 1, cls: "hot" }) +
+    B(170, 150, ["«…vas anar a plorar", "a la Xènia…»"], { d: 1, cls: "hot" }) +
     `<g class="pop" style="--d:2s"><circle class="isol pulse" cx="300" cy="222" r="56"/></g>`,
     "Al passadís, en Marc fa un comentari en veu baixa a l'Aina i després l'aïlla"),
   represalies: () => svgWrap(Wall() + Window(40, 24) + Ground(250) +
