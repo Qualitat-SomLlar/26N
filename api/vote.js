@@ -1,0 +1,20 @@
+/* POST /api/vote {sala, pid, round, choice} — registra o canvia el vot d'una persona */
+import { vote, validCode, validPid } from "../lib/game.js";
+import { handle, readJson, send } from "../lib/http.js";
+
+const MSG = {
+  sala: "No hi ha cap sala amb aquest codi.",
+  tancada: "La votació ja s'ha tancat.",
+  opcio: "Aquesta opció no és vàlida."
+};
+
+export default handle(async (req, res) => {
+  if (req.method !== "POST") return send(res, 405, { error: "metode" });
+  const { sala, pid, round, choice } = await readJson(req);
+  if (!validCode(sala) || !validPid(pid) || typeof round !== "number" || typeof choice !== "string") {
+    return send(res, 400, { error: "dades", message: "Dades no vàlides." });
+  }
+  const r = await vote(sala, pid, round, choice);
+  if (r.error) return send(res, r.status, { error: r.error, message: MSG[r.error] });
+  send(res, 200, r, { "Cache-Control": "no-store" });
+});

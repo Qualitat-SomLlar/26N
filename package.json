@@ -1,0 +1,13 @@
+{
+  "name": "jornada-25n",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Història interactiva amb votació col·lectiva per a la jornada del 25N de Som Llar",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "node dev-server.js"
+  }
+}
