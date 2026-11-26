@@ -257,3 +257,11 @@ p { margin: 0; }
 .warn-panel { border-left: 4px solid var(--magenta); }
 .big-status { font-size: 1.1em; }
 .big-status strong { font-size: 1.4em; color: var(--magenta); }
+
+/* ---- Logo de Som Llar ---- */
+.brand-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; min-width: 0; }
+.brand {
+  display: inline-flex; align-items: center; background: #ffffff; border-radius: 12px;
+  padding: 8px 14px; box-shadow: 0 0 0 1px var(--line);
+}
+.brand img { display: block; height: clamp(26px, 3.2vw, 40px); width: auto; max-width: 60vw; }
