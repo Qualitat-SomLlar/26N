@@ -24,5 +24,5 @@ export default handle(async (req, res) => {
   if (!e) return send(res, 404, { error: "sala", message: "La sala ha caducat o no existeix. Crea'n una de nova." }, noStore);
   if (action !== "status") e = await act(body.sala, e, action, body);
   const c = await counts(body.sala, e);
-  send(res, 200, { estat: e, ...c, storage }, noStore);
+  send(res, 200, { estat: e, ...c, storage, now: Date.now() }, noStore);
 });

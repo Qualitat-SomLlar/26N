@@ -1,6 +1,6 @@
 /* Pantalla de facilitació (projector): PIN, sala, QR, recompte i control de la història */
-import { STORY, optOf } from "./story.js";
-import { h, $, nodeView, resultView, finalView, mount, storeGet, storeSet, api } from "./ui.js";
+import { STORY, nodeOf, optOf } from "./story.js";
+import { h, $, nodeView, resultView, finalView, mount, storeGet, storeSet, api, countdownEl, setServerNow, serverNow } from "./ui.js";
 
 const POLL_MS = 1000;
 let pin = (() => { try { return sessionStorage.getItem("j25n-pin") || ""; } catch { return ""; } })();
@@ -45,9 +45,11 @@ async function status() {
   if (!pin || !sala) return;
   try {
     const d = await api("/api/admin", { pin, sala, action: "status" });
+    setServerNow(d.now);
     const stamp = `${d.estat.updatedAt}:${d.joined}:${d.votes}`;
     data = d;
     if (stamp !== lastStamp) { lastStamp = stamp; render(); }
+    autoClose();
   } catch (e) {
     if (e.status === 404) { sala = ""; data = null; storeSet("j25n-sala-fac", ""); flash("La sala anterior ha caducat. Crea'n una de nova."); }
     else if (e.status === 401) { savePin(""); data = null; loginError = "Torna a introduir el PIN."; render(); }
@@ -57,12 +59,72 @@ async function status() {
 async function act(action, extra = {}) {
   if (busy) return;
   busy = true; confirm = null; render();
-  try { data = await api("/api/admin", { pin, sala, action, ...extra }); lastStamp = ""; }
+  try { data = await api("/api/admin", { pin, sala, action, ...extra }); setServerNow(data.now); lastStamp = ""; }
   catch (e) { flash(e.message || "No s'ha pogut fer l'acció."); }
   finally { busy = false; render(); }
 }
 
 function startPolling() { clearInterval(pollTimer); pollTimer = setInterval(status, POLL_MS); }
+
+/* Tanca la votació sola quan s'acaba el temps */
+function autoClose() {
+  const e = data?.estat;
+  if (!e || e.phase !== "votant" || !e.deadline || busy) return;
+  if (serverNow() >= e.deadline) act("close");
+}
+setInterval(autoClose, 500);
+
+/* ---------- Resum descarregable (CSV per a Excel) ---------- */
+const TIMER_LABELS = { 0: "Sense límit", 30: "30 s", 60: "60 s", 90: "90 s" };
+function csvCell(v) { const t = v == null ? "" : String(v); return /[";\r\n]/.test(t) ? `"${t.replace(/"/g, '""')}"` : t; }
+function fmtTime(ms) { return ms ? new Date(ms).toLocaleTimeString("ca-ES", { hour: "2-digit", minute: "2-digit" }) : ""; }
+function downloadSummary() {
+  const e = data.estat;
+  const rows = [];
+  const entries = e.history.map(x => ({ ...x }));
+  if (e.phase === "resultat" && e.winner) entries.push({ node: e.node, choice: e.winner, tally: e.tally, joined: data.joined, picked: !!e.tied, current: true });
+  const maxJoined = Math.max(data.joined || 0, ...entries.map(x => x.joined || 0));
+  const fi = STORY.endings[e.node];
+  const durada = e.startedAt ? Math.round(((e.endedAt || serverNow()) - e.startedAt) / 60000) : "";
+  rows.push(["Jornada 25N · El xat de l'equip"]);
+  rows.push(["Sala", sala]);
+  rows.push(["Data", new Date().toLocaleDateString("ca-ES")]);
+  rows.push(["Hora d'inici", fmtTime(e.startedAt)]);
+  rows.push(["Hora de final", fmtTime(e.endedAt)]);
+  rows.push(["Durada (minuts)", durada]);
+  rows.push(["Persones connectades (màxim)", maxJoined]);
+  rows.push(["Temps per votar", TIMER_LABELS[e.timer] ?? ""]);
+  rows.push(["Final de la història", e.phase === "final" && fi ? fi.title : "(no s'ha arribat al final)"]);
+  rows.push([]);
+  rows.push(["Cruïlla", "Escena", "Opció guanyadora", "Text de l'opció", "Vots A", "Vots B", "Vots C", "Total de vots", "Persones connectades", "Decidida per empat", "Impacte en l'Aina"]);
+  let acc = 0;
+  entries.forEach((x, i) => {
+    const n = nodeOf(x.node), o = optOf(x.node, x.choice), t = x.tally || {};
+    acc += o?.aina || 0;
+    const total = (t.A || 0) + (t.B || 0) + (t.C || 0);
+    rows.push([i + 1, n?.title + (x.current ? " (en curs)" : ""), x.choice, o?.label, t.A ?? "", t.B ?? "", t.C ?? "", x.tally ? total : "", x.joined ?? "", x.picked ? "Sí" : "No", o?.aina]);
+  });
+  rows.push([]);
+  rows.push(["Impacte acumulat en l'Aina", acc]);
+  rows.push(["Els vots són anònims: el resum no conté cap dada personal."]);
+  const csv = "﻿" + rows.map(r => r.map(csvCell).join(";")).join("\r\n");
+  const a = h("a", { href: URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" })), download: `resum-jornada-25n-${new Date().toISOString().slice(0, 10)}.csv` });
+  document.body.append(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+}
+
+/* ---------- Pantalla completa ---------- */
+function setupFullscreen() {
+  const b = $("fs");
+  if (!b) return;
+  if (!document.fullscreenEnabled) { b.hidden = true; return; }
+  const label = () => { b.textContent = document.fullscreenElement ? "Sortir de pantalla completa" : "Pantalla completa"; };
+  b.addEventListener("click", async () => {
+    try { document.fullscreenElement ? await document.exitFullscreen() : await document.documentElement.requestFullscreen(); }
+    catch { flash("El navegador no ha permès la pantalla completa. Proveu la tecla F11."); }
+  });
+  document.addEventListener("fullscreenchange", label);
+  label();
+}
 
 /* ---------- QR ---------- */
 let qrCache = { url: "", el: null };
@@ -129,10 +191,11 @@ function lobbyScreen() {
 }
 
 function voteScreen() {
-  const status = h("p", { class: "status big-status" },
+  const votes = () => h("p", { class: "status big-status" },
     h("strong", null, String(data.votes)), data.votes === 1 ? " vot rebut" : " vots rebuts",
     ` de ${data.joined} ${data.joined === 1 ? "persona connectada" : "persones connectades"}`);
-  return nodeView(data.estat, { mine: null, canVote: false, status });
+  const top = h("div", { class: "vote-status" }, countdownEl(data.estat.deadline, data.estat.timer, { big: true }), votes());
+  return nodeView(data.estat, { mine: null, canVote: false, status: votes(), countdown: top });
 }
 
 function resultScreen() {
@@ -167,7 +230,14 @@ function renderFacbar() {
     const o = optOf(e.node, e.winner);
     if (o) add(o.next === "END" || STORY.endings[o.next] ? "Veure el final" : "Continuar la història", () => act("advance"));
   }
+  if (e.phase !== "inici") add("Descarregar resum", downloadSummary, "ghost");
   add("Reiniciar la sala", () => { confirm = "reset"; render(); }, "ghost");
+  if (e.phase !== "votant") {
+    const sel = h("select", { id: "timer", class: "timer-select", "aria-label": "Temps per votar", disabled: busy,
+      onchange: (ev) => act("timer", { seconds: Number(ev.target.value) }) },
+      [0, 30, 60, 90].map(v => h("option", { value: String(v), ...(v === (e.timer ?? 90) ? { selected: true } : {}) }, TIMER_LABELS[v])));
+    btns.prepend(h("label", { class: "timer-field" }, h("span", null, "Temps per votar"), sel));
+  }
 }
 
 function render() {
@@ -187,5 +257,6 @@ function render() {
   chip.textContent = data ? `Sala ${sala} · ${location.host}` : "Facilitació";
 }
 
+setupFullscreen();
 render();
 if (pin) login(pin);

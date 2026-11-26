@@ -1,5 +1,5 @@
 /* Pantalla de participant (mòbil): entrar amb codi o QR, connectar-se i votar */
-import { h, $, nodeView, resultView, finalView, mount, storeGet, storeSet, api } from "./ui.js";
+import { h, $, nodeView, resultView, finalView, mount, storeGet, storeSet, api, countdownEl, setServerNow } from "./ui.js";
 
 const POLL_MS = 2000;
 const newPid = () => (crypto.randomUUID ? crypto.randomUUID().replace(/-/g, "") : Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2, "0")).join("")).toLowerCase();
@@ -49,6 +49,7 @@ async function poll() {
   if (!sala) return;
   try {
     const d = await api(`/api/state?sala=${sala}`);
+    setServerNow(d.now);
     offline = false;
     if (d.estat.updatedAt !== lastUpdated || !estat) { estat = d.estat; lastUpdated = d.estat.updatedAt; render(); }
     else updateChip();
@@ -78,7 +79,7 @@ async function vote(choice) {
   try { await api("/api/vote", { sala, pid, round, choice }); }
   catch (e) {
     storeSet(votesKey(), prev);
-    flash(e.code === "tancada" ? "La votació ja s'ha tancat." : (e.message || "No s'ha pogut enviar el vot."));
+    flash(e.code === "tancada" || e.code === "temps" ? e.message : (e.message || "No s'ha pogut enviar el vot."));
     poll();
   }
 }
@@ -123,8 +124,10 @@ function dbWarning() {
 
 function voteScreen() {
   const mine = myVotes()[estat.round] || null;
-  const status = h("p", { class: "status" }, mine ? `El teu vot: ${mine}. Pots canviar-lo fins que es tanqui la votació.` : "Toca una opció per votar.");
-  return nodeView(estat, { mine, canVote: true, onVote: vote, status });
+  const status = h("div", { class: "vote-status" },
+    countdownEl(estat.deadline, estat.timer),
+    h("p", { class: "status" }, mine ? `El teu vot: ${mine}. Pots canviar-lo fins que es tanqui la votació.` : "Toca una opció per votar."));
+  return nodeView(estat, { mine, canVote: true, onVote: vote, status, countdown: countdownEl(estat.deadline, estat.timer) });
 }
 
 function updateChip() {

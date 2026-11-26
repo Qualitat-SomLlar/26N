@@ -56,12 +56,12 @@ export function impactEl(v) {
 }
 
 /* Cruïlla oberta a votació */
-export function nodeView(estat, { mine, canVote, onVote, status }) {
+export function nodeView(estat, { mine, canVote, onVote, status, countdown }) {
   const n = nodeOf(estat.node);
   return [
     sceneEl(n.scene, estat.history),
     h("div", { class: "col" },
-      stepLabel(estat), h("h2", null, n.title), storyBlock(n, estat.history),
+      stepLabel(estat), countdown || null, h("h2", null, n.title), storyBlock(n, estat.history),
       h("p", { class: "question" }, n.question),
       h("div", { class: "options", role: "group", "aria-label": n.question },
         n.options.map(o => h("button", {
@@ -168,6 +168,30 @@ export function mount(stage, content, estat) {
   lastSceneKey = key;
   stage.replaceChildren(...content);
 }
+
+/* ---------- Compte enrere ----------
+   clockOffset = hora del servidor − hora del dispositiu (s'actualitza amb cada resposta) */
+let clockOffset = 0;
+export function setServerNow(now) { if (typeof now === "number") clockOffset = now - Date.now(); }
+export const serverNow = () => Date.now() + clockOffset;
+
+export function countdownEl(deadline, total, { big = false } = {}) {
+  if (!deadline) return null;
+  const el = h("div", { class: "countdown" + (big ? " big" : ""), "data-deadline": String(deadline), "data-total": String(total || 90), role: "timer", "aria-live": "off" },
+    h("span", { class: "cd-num" }, ""),
+    h("span", { class: "cd-track", "aria-hidden": "true" }, h("span", { class: "cd-fill" })));
+  tickOne(el);
+  return el;
+}
+function tickOne(el) {
+  const left = Math.max(0, Math.ceil((Number(el.dataset.deadline) - serverNow()) / 1000));
+  const total = Number(el.dataset.total) || 90;
+  el.querySelector(".cd-num").textContent = left > 0 ? `${left} s` : "Temps esgotat";
+  el.querySelector(".cd-fill").style.width = `${Math.min(100, (left / total) * 100)}%`;
+  el.classList.toggle("urgent", left <= 10);
+  el.classList.toggle("done", left === 0);
+}
+setInterval(() => document.querySelectorAll(".countdown[data-deadline]").forEach(tickOne), 250);
 
 export function storeGet(k, fallback) { try { const v = localStorage.getItem(k); return v == null ? fallback : JSON.parse(v); } catch { return fallback; } }
 export function storeSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* sense emmagatzematge */ } }

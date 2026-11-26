@@ -5,6 +5,7 @@ import { handle, readJson, send } from "../lib/http.js";
 const MSG = {
   sala: "No hi ha cap sala amb aquest codi.",
   tancada: "La votació ja s'ha tancat.",
+  temps: "S'ha acabat el temps per votar.",
   opcio: "Aquesta opció no és vàlida."
 };
 

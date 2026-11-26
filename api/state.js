@@ -8,5 +8,5 @@ export default handle(async (req, res) => {
   const e = await getEstat(sala);
   if (!e) return send(res, 404, { error: "sala", message: "No hi ha cap sala amb aquest codi." });
   // Memòria cau d'1 s a la CDN: molts mòbils, poques lectures a la base de dades
-  send(res, 200, { estat: e }, { "Cache-Control": "public, max-age=0, s-maxage=1, stale-while-revalidate=1" });
+  send(res, 200, { estat: e, now: Date.now() }, { "Cache-Control": "public, max-age=0, s-maxage=1, stale-while-revalidate=1" });
 });
