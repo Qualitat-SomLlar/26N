@@ -64,6 +64,50 @@ function Phone(x, y, title, msgs, o = {}) {
   }
   return out;
 }
+/* Portàtil amb finestra de Teams */
+function Laptop(x, y, w, h, o = {}) {
+  const sx = x + 8, sy = y + 8, sw = w - 16, sh = h - 16;
+  const svg = `<g class="pop" style="--d:${o.d ?? 0}s">
+    <rect class="lp-frame" x="${x}" y="${y}" width="${w}" height="${h}" rx="10"/>
+    <rect class="ph-screen" x="${sx}" y="${sy}" width="${sw}" height="${sh}" rx="4"/>
+    <path class="lp-base" d="M${x - 18} ${y + h} L${x + w + 18} ${y + h} L${x + w + 6} ${y + h + 12} L${x - 6} ${y + h + 12} Z"/>
+    <rect class="tm-rail" x="${sx}" y="${sy}" width="24" height="${sh}" rx="4"/>
+    ${[0, 1, 2, 3].map(i => `<rect class="tm-ic" x="${sx + 7}" y="${sy + 12 + i * 22}" width="10" height="10" rx="3"/>`).join("")}
+    <rect class="tm-head" x="${sx + 24}" y="${sy}" width="${sw - 24}" height="28"/>
+    ${o.avatar ? `<circle cx="${sx + 40}" cy="${sy + 14}" r="8" class="r-${o.avatar}" style="fill:var(--c)"/>` : ""}
+    <text class="sv-txt" x="${sx + (o.avatar ? 54 : 34)}" y="${sy + 18}" font-weight="700" font-size="12">${esc(o.title || "")}</text>
+  </g>`;
+  return { svg, sx, sy, sw, sh };
+}
+function TeamsMsgs(L, msgs, o = {}) {
+  let cy = L.sy + 38, out = "";
+  msgs.forEach((m, i) => {
+    const d = (o.d ?? 0) + 0.4 + i * (m.slow ? 0.9 : 0.6);
+    const lines = m.lines || [];
+    const whoH = m.who ? 14 : 0;
+    const bw = Math.min(L.sw - 48, Math.max(60, ...lines.map(l => [...l].length * 6.2), m.who ? ([...m.who].length + 6) * 6 : 0) + 20);
+    const bh = lines.length * 15 + 10 + whoH;
+    const bx = m.mine ? L.sx + L.sw - 10 - bw : L.sx + 34;
+    out += `<g class="pop" style="--d:${d}s">
+      <rect class="${m.mine ? "msg-m" : "msg-o"}" x="${bx}" y="${cy}" width="${bw}" height="${bh}" rx="6"/>
+      ${m.who ? `<text class="msg-who r-${m.whoRole || "altres"}" style="fill:var(--c)" x="${bx + 9}" y="${cy + 13}">${esc(m.who)}</text>
+        ${m.time ? `<text class="tm-time" x="${bx + 14 + [...m.who].length * 6.2}" y="${cy + 13}">${esc(m.time)}</text>` : ""}` : ""}
+      ${lines.map((l, k) => `<text class="${m.mine ? "msg-m-t" : "msg-t"}" x="${bx + 9}" y="${cy + whoH + 17 + k * 15}">${esc(l)}</text>`).join("")}
+    </g>`;
+    cy += bh + 8;
+  });
+  return out;
+}
+function Toast(x, y, who, role, lines, d) {
+  const w = 216, h = 22 + lines.length * 15;
+  return `<g class="pop" style="--d:${d}s">
+    <rect class="tm-toast" x="${x}" y="${y}" width="${w}" height="${h}" rx="6"/>
+    <rect class="tm-stripe" x="${x}" y="${y}" width="5" height="${h}" rx="2"/>
+    <circle cx="${x + 20}" cy="${y + 16}" r="8" class="r-${role}" style="fill:var(--c)"/>
+    <text class="msg-who" x="${x + 34}" y="${y + 15}" style="fill:var(--fg)">${esc(who)} · Teams</text>
+    ${lines.map((l, k) => `<text class="msg-t" x="${x + 34}" y="${y + 30 + k * 15}">${esc(l)}</text>`).join("")}
+  </g>`;
+}
 const Table = (x, y, w, h = 16) => `<rect class="sv-furn" x="${x}" y="${y}" width="${w}" height="${h}" rx="6"/>`;
 const Mug = (x, y) => `<rect class="sv-furn" x="${x}" y="${y - 14}" width="12" height="14" rx="2"/><path class="sv-line" d="M${x + 12} ${y - 11} q6 0 6 5 t-6 5"/>`;
 const Steam = (x, y) => `<path class="steam drift" d="M${x} ${y} q-5 -8 0 -16 t0 -16"/>`;
@@ -74,37 +118,49 @@ const Door = (x, y) => `<rect class="sv-furn" x="${x}" y="${y}" width="56" heigh
 const svgWrap = (inner, label) => `<svg viewBox="0 0 480 320" role="img" aria-label="${esc(label)}" xmlns="http://www.w3.org/2000/svg">${inner}</svg>`;
 
 export const SCENES = {
-  intro: () => svgWrap(Wall() + Phone(30, 10, "Equip 🏠", [
-      { who: "Laura", lines: ["Bon dia! Qui té les", "claus del pis 3?"] },
+  intro: () => {
+    const L = Laptop(20, 24, 290, 206, { title: "Equip · General" });
+    return svgWrap(Wall() + L.svg + TeamsMsgs(L, [
+      { who: "Laura", time: "9:02", lines: ["Bon dia! Qui té les claus del pis 3?"] },
       { mine: true, lines: ["Jo! Les porto ara"] },
-      { who: "Pau", lines: ["Gràcies 🙌"] }
-    ], { typing: true }) +
-    B(330, 90, ["Què faries tu?"], { d: 2.4, align: "center", cls: "hot" }) +
-    P(330, 200, "tu", { d: 2, s: 1.3, label: "Tu" }),
-    "Un mòbil amb el xat de l'equip i una figura que es pregunta què faria"),
+      { who: "Pau", time: "9:05", lines: ["Gràcies 🙌"] }
+    ]) +
+    B(395, 110, ["Què faries tu?"], { d: 2.4, align: "center", cls: "hot" }) +
+    P(395, 230, "tu", { d: 2, s: 1.2, label: "Tu" }),
+    "Un portàtil amb el xat de Teams de l'equip i una figura que es pregunta què faria");
+  },
   benvinguda: () => svgWrap(Wall() + Window(360, 30) + Ground(250) +
     P(80, 215, "altres", { ly: 46,  d: 0.1 }) + P(160, 215, "marc", { ly: 46,  d: 0.2 }) + P(240, 215, "aina", { ly: 46,  d: 0.3 }) +
     P(320, 215, "tu", { ly: 46,  d: 0.4 }) + P(400, 215, "altres", { ly: 46,  d: 0.5 }) +
     Table(40, 222, 400, 18) + Mug(150, 222) + Mug(232, 222) + Mug(312, 222) + Mug(392, 222) + Steam(238, 205) +
-    B(160, 148, ["«Amb tu l'equip guanya", "en bellesa, eh?»"], { d: 1, cls: "hot" }) +
+    B(160, 140, ["«Amb aquest somriure", "ens alegraràs el dia»"], { d: 1, cls: "hot" }) +
     B(80, 108, ["ha ha"], { d: 1.8, cls: "soft" }) + B(400, 126, ["ha ha"], { d: 2, cls: "soft", align: "right" }) +
-    B(258, 162, ["…"], { d: 2.6, think: true, cls: "soft" }),
-    "Pausa del cafè: en Marc fa un comentari sobre el físic de l'Aina davant de l'equip"),
-  xat: () => svgWrap(Wall() + Phone(130, 10, "Equip (informal)", [
-      { who: "Laura", lines: ["Algú ve dissabte al", "sopar? 🍕"] },
-      { who: "Marc", whoRole: "marc", img: true, lines: ["Ara entenc per què", "la van contractar 🔥"], react: "😂 2", slow: true }
-    ], { typing: true }) + P(60, 290, "tu", { d: 2.8, s: 0.9 }) + B(60, 225, ["?"], { d: 3.2, think: true, align: "center" }),
-    "Xat de l'equip: en Marc comparteix una foto de l'Aina amb un comentari sexual i dues persones hi reaccionen amb rialles"),
-  nuria: (has) => svgWrap(Wall() + Phone(130, 10, "Núria", has("xat:B")
-      ? [{ lines: ["Molt bé el que vas dir,", "eh."] }, { lines: ["Però potser no calia", "fer-ho al grup…", "Ara hi ha mal rotllo 😬"], slow: true }]
-      : [{ lines: ["Has vist el que va", "penjar en Marc?"] }, { lines: ["Quin mal gust…", "Però bé, ja el coneixem.", "No ho fa amb mala", "intenció 🤷"], slow: true }],
-    { avatar: "nuria", typing: true }) + P(400, 250, "nuria", { d: 0.2 }) + P(70, 250, "tu", { d: 0.4 }),
-    "Missatge privat de la Núria sobre el que ha passat al xat"),
+    B(275, 172, ["…"], { d: 2.6, think: true, cls: "soft" }),
+    "Pausa del cafè: en Marc fa un comentari sobre el somriure de l'Aina davant de l'equip"),
+  xat: () => {
+    const L = Laptop(90, 12, 300, 210, { title: "Informe visita · Habitatge 3" });
+    const doc = [0, 1, 2, 3, 4, 5].map(i => `<rect class="doc-line" x="${L.sx + 36}" y="${L.sy + 42 + i * 16}" width="${[220, 180, 236, 150, 200, 120][i]}" height="7" rx="3"/>`).join("");
+    return svgWrap(Wall() + L.svg + `<g class="pop" style="--d:0.2s">${doc}</g>` +
+      Toast(L.sx + L.sw - 246, L.sy + 80, "Marc", "marc", ["Avui estàs especialment guapa 😍"], 1.2) +
+      Toast(L.sx + L.sw - 246, L.sy + 128, "Marc", "marc", ["No aconsegueixo concentrar-me", "amb tu davant…"], 2.2) +
+      P(45, 290, "aina", { d: 0.3, s: 0.9 }) + P(435, 290, "tu", { d: 0.4, s: 0.9 }) +
+      B(435, 225, ["?"], { d: 3, think: true, align: "center" }),
+      "Portàtil de l'Aina: mentre treballeu, apareixen notificacions de Teams d'en Marc amb comentaris sobre el seu físic");
+  },
+  nuria: () => {
+    const L = Laptop(60, 12, 330, 236, { title: "Núria", avatar: "nuria" });
+    return svgWrap(Wall() + L.svg + TeamsMsgs(L, [
+      { who: "Núria", whoRole: "nuria", time: "16:42", lines: ["Has sentit en Marc? 😅"] },
+      { lines: ["Diu que l'Aina s'ha posat molt", "seriosa per un compliment…"] },
+      { lines: ["Tampoc n'hi ha per a tant, no?", "Ell és així, no ho fa amb mala", "intenció 🤷"], slow: true }
+    ]) + P(440, 292, "tu", { d: 0.4, s: 0.85 }) + B(440, 230, ["…"], { d: 3, think: true, align: "center" }),
+    "Xat privat de Teams: la Núria resta importància als missatges d'en Marc");
+  },
   cuina: () => svgWrap(Wall() + Ground(250) +
     `<rect class="sv-furn" x="20" y="180" width="140" height="70" rx="4"/><rect class="sv-furn" x="40" y="140" width="44" height="40" rx="6"/>` + Steam(62, 132) + Steam(72, 128) +
     P(250, 250, "aina", { d: 0.2, s: 1.15 }) + P(360, 250, "tu", { d: 0.4, s: 1.15 }) +
-    B(250, 150, ["«Tu en saps", "alguna cosa?»"], { d: 1, cls: "hot" }),
-    "A la cuina, l'Aina pregunta si saps què està passant"),
+    B(250, 150, ["«Tu creus", "que exagero?»"], { d: 1, cls: "hot" }),
+    "A la cuina, l'Aina et pregunta si creus que exagera"),
   aina: () => svgWrap(Wall() + Window(195, 30) + Ground(250) +
     `<rect class="sv-furn" x="110" y="215" width="70" height="12" rx="4"/><rect class="sv-furn" x="300" y="215" width="70" height="12" rx="4"/>` +
     P(145, 215, "aina", { ly: 34,  d: 0.2, s: 1.1 }) + P(335, 215, "tu", { ly: 34,  d: 0.4, s: 1.1 }) +
@@ -118,7 +174,7 @@ export const SCENES = {
     "Despatx de coordinació: la coordinadora proposa resoldre-ho de manera discreta"),
   rumor: () => svgWrap(Wall() + Ground(250) + `<path class="sv-line" d="M0 250 L480 250 M60 0 v250 M420 0 v250"/>` +
     P(170, 250, "marc", { d: 0.2, s: 1.1 }) + P(300, 250, "aina", { d: 0.4, s: 1.1 }) +
-    B(170, 150, ["«…vas anar a plorar", "a la Xènia…»"], { d: 1, cls: "hot" }) +
+    B(170, 150, ["«…vas anar a queixar-te", "per quatre compliments…»"], { d: 1, cls: "hot" }) +
     `<g class="pop" style="--d:2s"><circle class="isol pulse" cx="300" cy="222" r="56"/></g>`,
     "Al passadís, en Marc fa un comentari en veu baixa a l'Aina i després l'aïlla"),
   represalies: () => svgWrap(Wall() + Window(40, 24) + Ground(250) +
@@ -133,16 +189,16 @@ export const SCENES = {
     P(90, 205, "altres", { ly: 44,  d: 0.1, label: "Comissió" }) + P(160, 205, "altres", { ly: 44,  d: 0.15, label: "" }) + P(230, 205, "altres", { ly: 44,  d: 0.2, label: "" }) +
     Table(50, 212, 380, 18) + `<rect class="sv-furn" x="120" y="200" width="30" height="12" rx="2"/>` +
     P(320, 290, "aina", { d: 0.4, s: 0.95 }) + P(395, 290, "tu", { d: 0.5, s: 0.95 }) +
-    B(160, 128, ["«I per què tens aquestes", "fotos en obert?»"], { d: 1.1, cls: "hot" }),
-    "Entrevista amb la comissió del protocol: una pregunta posa el focus en l'Aina"),
+    B(160, 128, ["«Si li contestaves amb", "emoticones, potser…»"], { d: 1.1, cls: "hot" }),
+    "Entrevista amb la comissió del protocol: una pregunta culpabilitza l'Aina per haver contestat amb emoticones"),
   tornada: () => svgWrap(Wall() + Ground(250) +
     [0, 1, 2, 3, 4, 5, 6].map(i => {
       const a = Math.PI * (0.15 + i * 0.7 / 6), cx = 240 - Math.cos(a) * 190, cy = 250 - Math.sin(a) * 50;
       const roles = ["altres", "nuria", "aina", "altres", "silvia", "altres", "tu"];
       return P(cx, cy + 10, roles[i], { d: 0.1 * i, s: 0.9 });
     }).join("") +
-    B(120, 108, ["«Ara ja no es podrà", "fer cap broma.»"], { d: 1.2, cls: "hot" }),
-    "Reunió d'equip després de la resolució: algú diu que ara ja no es podran fer bromes"),
+    B(120, 108, ["«Ara ja no es podrà", "dir res a ningú.»"], { d: 1.2, cls: "hot" }),
+    "Reunió d'equip després de la resolució: algú diu que ara ja no es podrà dir res"),
   fi_bo: () => svgWrap(Wall() + Ground(250) +
     [80, 160, 240, 320, 400].map((x, i) => P(x, 240, ["nuria", "tu", "aina", "silvia", "altres"][i], { d: 0.15 * i })).join("") +
     `<g class="pop" style="--d:1s"><path class="link" d="M80 200 Q160 160 240 200 Q320 160 400 200"/></g>` +

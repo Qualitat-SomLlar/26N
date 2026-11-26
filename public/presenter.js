@@ -86,7 +86,7 @@ function downloadSummary() {
   const maxJoined = Math.max(data.joined || 0, ...entries.map(x => x.joined || 0));
   const fi = STORY.endings[e.node];
   const durada = e.startedAt ? Math.round(((e.endedAt || serverNow()) - e.startedAt) / 60000) : "";
-  rows.push(["Jornada 25N · El xat de l'equip"]);
+  rows.push(["Jornada 25N · Només era un compliment"]);
   rows.push(["Sala", sala]);
   rows.push(["Data", new Date().toLocaleDateString("ca-ES")]);
   rows.push(["Hora d'inici", fmtTime(e.startedAt)]);

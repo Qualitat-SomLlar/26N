@@ -1,4 +1,4 @@
-# Jornada 25N · «El xat de l'equip»
+# Jornada 25N · «Només era un compliment»
 
 Història interactiva amb votació col·lectiva per a la jornada de reflexió del 25N de Som Llar.
 Funciona com un Kahoot: la persona facilitadora projecta la pantalla i les persones participants

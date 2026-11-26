@@ -214,6 +214,14 @@ p { margin: 0; }
 .img-ph { fill: var(--magenta); opacity: 0.28; }
 .img-ic { fill: var(--magenta); opacity: 0.7; }
 .react { fill: var(--surface); stroke: var(--line); }
+.lp-frame { fill: var(--fg); opacity: 0.9; }
+.lp-base { fill: var(--fg); opacity: 0.7; }
+.tm-rail, .tm-stripe { fill: #5b5fc7; }
+.tm-ic { fill: #ffffff; opacity: 0.55; }
+.tm-head { fill: var(--surface-2); }
+.tm-toast { fill: var(--surface); stroke: var(--line); stroke-width: 1.5; }
+.tm-time { fill: var(--muted); font-family: var(--body); font-size: 9px; }
+.doc-line { fill: var(--line); }
 .steam { fill: none; stroke: var(--muted); stroke-width: 2; stroke-linecap: round; opacity: 0.6; }
 .heart { fill: var(--magenta); }
 .link { stroke: var(--violet); stroke-width: 2; stroke-dasharray: 3 5; fill: none; }
