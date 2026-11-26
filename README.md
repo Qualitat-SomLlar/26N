@@ -85,7 +85,7 @@ Al projecte de Vercel → **Settings → Environment Variables** → afegiu:
 ### 6. Provar-ho
 
 Obriu `/presenta` a l'ordinador i la URL principal en 2 o 3 mòbils. Feu un parell de cruïlles i
-premeu **Reiniciar** abans de la jornada.
+premeu **Reiniciar la sala** abans de la jornada.
 
 ## Provar-ho a l'ordinador (sense Vercel)
 

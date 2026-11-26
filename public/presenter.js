@@ -149,8 +149,10 @@ function renderFacbar() {
   btns.replaceChildren();
   const add = (label, fn, cls) => btns.append(h("button", { class: "btn " + (cls || ""), type: "button", onclick: fn, disabled: busy }, label));
   if (confirm) {
-    btns.append(h("span", { class: "status", style: "align-self:center" }, confirm === "reset" ? "Tornar a l'inici? Els vots es reinicien." : "Crear una sala nova amb un codi diferent?"));
-    add(confirm === "reset" ? "Sí, reiniciar" : "Sí, crear-la", confirm === "reset" ? () => act("reset") : createSala, "warn");
+    btns.append(h("span", { class: "status", style: "align-self:center" }, confirm === "reset"
+      ? "Reiniciar la sala? Es buiden els vots i les connexions: tots els mòbils hauran de tornar a prémer «Em connecto»."
+      : "Crear una sala nova amb un codi diferent?"));
+    add(confirm === "reset" ? "Sí, reiniciar la sala" : "Sí, crear-la", confirm === "reset" ? () => act("reset") : createSala, "warn");
     add("Cancel·lar", () => { confirm = null; render(); }, "ghost");
     return;
   }
@@ -165,7 +167,7 @@ function renderFacbar() {
     const o = optOf(e.node, e.winner);
     if (o) add(o.next === "END" || STORY.endings[o.next] ? "Veure el final" : "Continuar la història", () => act("advance"));
   }
-  if (e.phase !== "inici") add("Reiniciar", () => { confirm = "reset"; render(); }, "ghost");
+  add("Reiniciar la sala", () => { confirm = "reset"; render(); }, "ghost");
 }
 
 function render() {
